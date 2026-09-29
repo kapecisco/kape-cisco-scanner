@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+  <title>Kape Cisco Scanner</title>
+
+  <!-- QR DECODER -->
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #f7f4ef;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: auto;
+    }
+
+    h1 {
+      margin-bottom: 5px;
+    }
+
+    .subtitle {
+      color: #777;
+      margin-bottom: 25px;
+    }
+
+    .card {
+      background: white;
+      padding: 25px;
+      border-radius: 18px;
+      box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+    }
+
+    button {
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 10px;
+      font-size: 17px;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+    }
+
+    .scan {
+      background: #8b5e3c;
+      color: white;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .stop {
+      background: #b33a3a;
+      color: white;
+    }
+
+    .search {
+      background: #222;
+      color: white;
+    }
+
+    .sticker {
+      background: #8b5e3c;
+      color: white;
+    }
+
+    .reset {
+      background: #eee;
+      color: #333;
+    }
+
+    input {
+      width: 100%;
+      padding: 15px;
+      font-size: 18px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      margin-top: 15px;
+      outline: none;
+    }
+
+    #scannerContainer {
+      margin-top: 15px;
+    }
+
+    #camera {
+      width: 100%;
+      display: block;
+      background: #111;
+      border-radius: 15px;
+      object-fit: cover;
+    }
+
+    #qrCanvas {
+      display: none;
+    }
+
+    .scan-status {
+      margin-top: 12px;
+      font-weight: bold;
+      color: #555;
+      line-height: 1.4;
+    }
+
+    .customer {
+      margin-top: 25px;
+      padding: 20px;
+      background: #fafafa;
+      border-radius: 15px;
+    }
+
+    .name {
+      font-size: 25px;
+      font-weight: bold;
+    }
+
+    .id {
+      color: #777;
+      margin-top: 5px;
+    }
+
+    .stickers {
+      font-size: 45px;
+      font-weight: bold;
+      margin: 20px 0;
+    }
+
+    .reward {
+      background: #fff3cd;
+      padding: 15px;
+      border-radius: 10px;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+
+    .message {
+      margin-top: 15px;
+      font-weight: bold;
+      line-height: 1.4;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+<div class="container">
+
+
+  <h1>☕ Kape Cisco</h1>
+
+  <div class="subtitle">
+    Barista Loyalty Scanner
+  </div>
+
+
+  <div class="card">
+
+
+    <!-- ================================= -->
+    <!-- SCAN BUTTON -->
+    <!-- ================================= -->
+
+    <button
+      id="startScannerButton"
+      class="scan"
+      onclick="startQRScanner()">
+
+      📷 SCAN CUSTOMER QR
+
+    </button>
+
+
+    <!-- ================================= -->
+    <!-- LIVE CAMERA -->
+    <!-- ================================= -->
+
+    <div
+      id="scannerContainer"
+      class="hidden">
+
+      <video
+        id="camera"
+        autoplay
+        playsinline
+        muted>
+      </video>
+
+      <canvas
+        id="qrCanvas">
+      </canvas>
+
+      <button
+        class="stop"
+        onclick="stopQRScanner()">
+
+        ✕ STOP SCANNER
+
+      </button>
+
+      <div
+        id="scanStatus"
+        class="scan-status">
+
+        Point the camera at the customer's QR code.
+
+      </div>
+
+    </div>
+
+
+    <!-- ================================= -->
+    <!-- MANUAL ID -->
+    <!-- ================================= -->
+
+    <input
+      id="customerId"
+      type="text"
+      placeholder="Or enter Customer ID manually"
+      autocomplete="off">
+
+
+    <button
+      class="search"
+      onclick="searchCustomer()">
+
+      Find Customer
+
+    </button>
+
+
+    <!-- ================================= -->
+    <!-- CUSTOMER -->
+    <!-- ================================= -->
+
+    <div
+      id="customerCard"
+      class="customer hidden">
+
+
+      <div
+        id="customerName"
+        class="name">
+      </div>
+
+
+      <div
+        id="customerCode"
+        class="id">
+      </div>
+
+
+      <div
+        id="stickerCount"
+        class="stickers">
+      </div>
+
+
+      <div
+        id="rewardMessage"
+        class="reward hidden">
+
+        🎉 FREE LATTE AVAILABLE!
+
+      </div>
+
+
+      <button
+        id="stickerButton"
+        class="sticker"
+        onclick="addSticker()">
+
+        + ADD 1 STICKER
+
+      </button>
+
+
+    </div>
+
+
+    <!-- ================================= -->
+    <!-- RESET -->
+    <!-- ================================= -->
+
+    <button
+      class="reset"
+      onclick="resetScanner()">
+
+      Scan Another Customer
+
+    </button>
+
+
+    <div
+      id="message"
+      class="message">
+    </div>
+
+
+  </div>
+
+</div>
+
+
+
+<script>
+
+
+/* =====================================================
+   IMPORTANT
+   =====================================================
+
+   AFTER YOUR APPS SCRIPT IS DEPLOYED,
+
+   paste the /exec URL here.
+
+   Example:
+
+   https://script.google.com/macros/s/XXXXXXXXXXXX/exec
+*/
+
+const APPS_SCRIPT_URL =
+  "PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
+
+
+/* =====================================================
+   VARIABLES
+   ===================================================== */
+
+let currentCustomer = null;
+
+let cameraStream = null;
+
+let scannerRunning = false;
+
+let scanAnimation = null;
+
+let qrAlreadyScanned = false;
+
+
+/* =====================================================
+   START CAMERA
+   ===================================================== */
+
+async function startQRScanner() {
+
+  if (scannerRunning) {
+    return;
+  }
+
+  qrAlreadyScanned = false;
+
+  const container =
+    document.getElementById(
+      "scannerContainer"
+    );
+
+  const button =
+    document.getElementById(
+      "startScannerButton"
+    );
+
+  const status =
+    document.getElementById(
+      "scanStatus"
+    );
+
+
+  container.classList.remove(
+    "hidden"
+  );
+
+  button.classList.add(
+    "hidden"
+  );
+
+  status.textContent =
+    "📷 Requesting camera access...";
+
+
+  if (
+    !navigator.mediaDevices ||
+    !navigator.mediaDevices.getUserMedia
+  ) {
+
+    status.textContent =
+      "❌ This browser does not support camera access.";
+
+    return;
+  }
+
+
+  try {
+
+    cameraStream =
+      await navigator.mediaDevices.getUserMedia({
+
+        video: {
+          facingMode: {
+            ideal: "environment"
+          },
+
+          width: {
+            ideal: 1280
+          },
+
+          height: {
+            ideal: 720
+          }
+        },
+
+        audio: false
+
+      });
+
+
+    const video =
+      document.getElementById(
+        "camera"
+      );
+
+
+    video.srcObject =
+      cameraStream;
+
+
+    await video.play();
+
+
+    scannerRunning =
+      true;
+
+
+    status.textContent =
+      "📷 Camera ready — point it at the customer QR code.";
+
+
+    scanQRFrame();
+
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "Camera error:",
+      error
+    );
+
+
+    stopCameraOnly();
+
+
+    container.classList.add(
+      "hidden"
+    );
+
+
+    button.classList.remove(
+      "hidden"
+    );
+
+
+    if (
+      error.name ===
+      "NotAllowedError"
+    ) {
+
+      showMessage(
+        "❌ Camera permission denied. Safari must allow Camera for this GitHub Pages website."
+      );
+
+    }
+
+    else if (
+      error.name ===
+      "NotFoundError"
+    ) {
+
+      showMessage(
+        "❌ No camera found."
+      );
+
+    }
+
+    else if (
+      error.name ===
+      "NotReadableError"
+    ) {
+
+      showMessage(
+        "❌ Camera is already being used by another app or browser tab."
+      );
+
+    }
+
+    else {
+
+      showMessage(
+        "❌ Camera error: " +
+        error.name
+      );
+
+    }
+
+  }
+
+}
+
+
+/* =====================================================
+   LIVE QR DETECTION
+   ===================================================== */
+
+function scanQRFrame() {
+
+  if (!scannerRunning) {
+    return;
+  }
+
+
+  const video =
+    document.getElementById(
+      "camera"
+    );
+
+  const canvas =
+    document.getElementById(
+      "qrCanvas"
+    );
+
+
+  if (
+    video.readyState <
+    video.HAVE_ENOUGH_DATA
+  ) {
+
+    scanAnimation =
+      requestAnimationFrame(
+        scanQRFrame
+      );
+
+    return;
+  }
+
+
+  const width =
+    video.videoWidth;
+
+  const height =
+    video.videoHeight;
+
+
+  if (
+    width === 0 ||
+    height === 0
+  ) {
+
+    scanAnimation =
+      requestAnimationFrame(
+        scanQRFrame
+      );
+
+    return;
+  }
+
+
+  canvas.width =
+    width;
+
+  canvas.height =
+    height;
+
+
+  const context =
+    canvas.getContext(
+      "2d",
+      {
+        willReadFrequently: true
+      }
+    );
+
+
+  context.drawImage(
+    video,
+    0,
+    0,
+    width,
+    height
+  );
+
+
+  const imageData =
+    context.getImageData(
+      0,
+      0,
+      width,
+      height
+    );
+
+
+  const code =
+    jsQR(
+      imageData.data,
+      imageData.width,
+      imageData.height,
+      {
+        inversionAttempts:
+          "attemptBoth"
+      }
+    );
+
+
+  if (
+    code &&
+    code.data
+  ) {
+
+    handleQRCode(
+      code.data
+    );
+
+    return;
+  }
+
+
+  scanAnimation =
+    requestAnimationFrame(
+      scanQRFrame
+    );
+
+}
+
+
+/* =====================================================
+   QR RESULT
+   ===================================================== */
+
+function handleQRCode(
+  decodedText
+) {
+
+  if (qrAlreadyScanned) {
+    return;
+  }
+
+
+  qrAlreadyScanned =
+    true;
+
+
+  let customerId =
+    decodedText
+      .trim()
+      .replace(
+        /\s+/g,
+        ""
+      );
+
+
+  console.log(
+    "QR CONTENT:",
+    customerId
+  );
+
+
+  /*
+    Expected format:
+
+    KC-XXXXXXXX
+  */
+
+  if (
+    !/^KC-[A-Z0-9]+$/i.test(
+      customerId
+    )
+  ) {
+
+    qrAlreadyScanned =
+      false;
+
+
+    document
+      .getElementById(
+        "scanStatus"
+      )
+      .textContent =
+        "❌ QR detected, but it is not a valid Kape Cisco Customer ID.";
+
+
+    scanAnimation =
+      requestAnimationFrame(
+        scanQRFrame
+      );
+
+
+    return;
+  }
+
+
+  document
+    .getElementById(
+      "customerId"
+    )
+    .value =
+      customerId;
+
+
+  document
+    .getElementById(
+      "scanStatus"
+    )
+    .textContent =
+      "✅ QR detected: " +
+      customerId;
+
+
+  stopQRScanner();
+
+
+  searchCustomer();
+
+}
+
+
+/* =====================================================
+   STOP SCANNER
+   ===================================================== */
+
+function stopQRScanner() {
+
+  scannerRunning =
+    false;
+
+
+  if (scanAnimation) {
+
+    cancelAnimationFrame(
+      scanAnimation
+    );
+
+    scanAnimation =
+      null;
+  }
+
+
+  stopCameraOnly();
+
+
+  document
+    .getElementById(
+      "scannerContainer"
+    )
+    .classList
+    .add("hidden");
+
+
+  document
+    .getElementById(
+      "startScannerButton"
+    )
+    .classList
+    .remove("hidden");
+
+}
+
+
+/* =====================================================
+   STOP CAMERA
+   ===================================================== */
+
+function stopCameraOnly() {
+
+  if (cameraStream) {
+
+    cameraStream
+      .getTracks()
+      .forEach(
+        function(track) {
+          track.stop();
+        }
+      );
+
+    cameraStream =
+      null;
+  }
+
+
+  const video =
+    document.getElementById(
+      "camera"
+    );
+
+
+  if (video) {
+
+    video.pause();
+
+    video.srcObject =
+      null;
+  }
+
+}
+
+
+/* =====================================================
+   JSONP REQUEST
+   ===================================================== */
+
+function callAppsScript(
+  action,
+  params,
+  callback
+) {
+
+  const callbackName =
+    "kapeCiscoCallback_" +
+    Date.now() +
+    "_" +
+    Math.floor(
+      Math.random() * 100000
+    );
+
+
+  window[callbackName] =
+    function(result) {
+
+      try {
+
+        callback(result);
+
+      }
+
+      finally {
+
+        delete window[
+          callbackName
+        ];
+
+        if (
+          script &&
+          script.parentNode
+        ) {
+
+          script.parentNode
+            .removeChild(script);
+
+        }
+
+      }
+
+    };
+
+
+  const script =
+    document.createElement(
+      "script"
+    );
+
+
+  const query =
+    new URLSearchParams();
+
+
+  query.set(
+    "action",
+    action
+  );
+
+
+  query.set(
+    "callback",
+    callbackName
+  );
+
+
+  Object.keys(params || {})
+    .forEach(
+      function(key) {
+
+        query.set(
+          key,
+          params[key]
+        );
+
+      }
+    );
+
+
+  script.src =
+    APPS_SCRIPT_URL +
+    "?" +
+    query.toString();
+
+
+  script.onerror =
+    function() {
+
+      delete window[
+        callbackName
+      ];
+
+      showMessage(
+        "❌ Unable to connect to Kape Cisco server."
+      );
+
+    };
+
+
+  document
+    .body
+    .appendChild(
+      script
+    );
+
+}
+
+
+/* =====================================================
+   FIND CUSTOMER
+   ===================================================== */
+
+function searchCustomer() {
+
+  const id =
+    document
+      .getElementById(
+        "customerId"
+      )
+      .value
+      .trim();
+
+
+  if (!id) {
+
+    showMessage(
+      "Please scan or enter a Customer ID."
+    );
+
+    return;
+  }
+
+
+  showMessage(
+    "Searching..."
+  );
+
+
+  callAppsScript(
+
+    "findCustomer",
+
+    {
+      customerId: id
+    },
+
+    function(customer) {
+
+      displayCustomer(
+        customer
+      );
+
+    }
+
+  );
+
+}
+
+
+/* =====================================================
+   DISPLAY CUSTOMER
+   ===================================================== */
+
+function displayCustomer(
+  customer
+) {
+
+  if (
+    !customer ||
+    !customer.found
+  ) {
+
+    currentCustomer =
+      null;
+
+
+    document
+      .getElementById(
+        "customerCard"
+      )
+      .classList
+      .add("hidden");
+
+
+    showMessage(
+      "❌ Customer not found."
+    );
+
+
+    return;
+  }
+
+
+  currentCustomer =
+    customer;
+
+
+  document
+    .getElementById(
+      "customerCard"
+    )
+    .classList
+    .remove("hidden");
+
+
+  document
+    .getElementById(
+      "customerName"
+    )
+    .textContent =
+      customer.name;
+
+
+  document
+    .getElementById(
+      "customerCode"
+    )
+    .textContent =
+      customer.customerId;
+
+
+  updateStickerDisplay(
+    customer.stickers
+  );
+
+
+  showMessage("");
+
+}
+
+
+/* =====================================================
+   STICKER DISPLAY
+   ===================================================== */
+
+function updateStickerDisplay(
+  stickers
+) {
+
+  document
+    .getElementById(
+      "stickerCount"
+    )
+    .textContent =
+      stickers +
+      " / 11";
+
+
+  const reward =
+    document
+      .getElementById(
+        "rewardMessage"
+      );
+
+
+  if (
+    stickers >= 11
+  ) {
+
+    reward
+      .classList
+      .remove("hidden");
+
+  }
+
+  else {
+
+    reward
+      .classList
+      .add("hidden");
+
+  }
+
+}
+
+
+/* =====================================================
+   ADD STICKER
+   ===================================================== */
+
+function addSticker() {
+
+  if (!currentCustomer) {
+
+    showMessage(
+      "Please scan a customer first."
+    );
+
+    return;
+  }
+
+
+  const button =
+    document.getElementById(
+      "stickerButton"
+    );
+
+
+  button.disabled =
+    true;
+
+
+  button.textContent =
+    "ADDING...";
+
+
+  callAppsScript(
+
+    "addSticker",
+
+    {
+      customerId:
+        currentCustomer.customerId
+    },
+
+    function(result) {
+
+      button.disabled =
+        false;
+
+
+      button.textContent =
+        "+ ADD 1 STICKER";
+
+
+      if (
+        !result ||
+        !result.success
+      ) {
+
+        showMessage(
+          "❌ " +
+          (
+            result &&
+            result.message
+              ? result.message
+              : "Unable to add sticker."
+          )
+        );
+
+        return;
+      }
+
+
+      currentCustomer.stickers =
+        result.stickers;
+
+
+      updateStickerDisplay(
+        result.stickers
+      );
+
+
+      if (
+        result.rewardReady
+      ) {
+
+        showMessage(
+          "🎉 Customer has reached 11 stickers!"
+        );
+
+      }
+
+      else {
+
+        showMessage(
+          "✅ 1 sticker added!"
+        );
+
+      }
+
+    }
+
+  );
+
+}
+
+
+/* =====================================================
+   RESET
+   ===================================================== */
+
+function resetScanner() {
+
+  stopQRScanner();
+
+
+  currentCustomer =
+    null;
+
+
+  qrAlreadyScanned =
+    false;
+
+
+  document
+    .getElementById(
+      "customerId"
+    )
+    .value =
+      "";
+
+
+  document
+    .getElementById(
+      "customerCard"
+    )
+    .classList
+    .add("hidden");
+
+
+  showMessage("");
+
+
+}
+
+
+/* =====================================================
+   MESSAGE
+   ===================================================== */
+
+function showMessage(
+  message
+) {
+
+  document
+    .getElementById(
+      "message"
+    )
+    .textContent =
+      message;
+
+}
+
+</script>
+
+
+</body>
+
+</html>
